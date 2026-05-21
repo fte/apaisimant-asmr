@@ -412,6 +412,24 @@
             document.getElementById('hz-indicator').innerText = "Visualisateur branché";
             visualizerCanvas.height = 180;
             drawVisualizer();
+            setupMediaSession();
+        }
+
+        function setupMediaSession() {
+            if (!('mediaSession' in navigator)) return;
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'SERENE — ASMR Procédural',
+                artist: 'Serene Studio',
+            });
+            navigator.mediaSession.setActionHandler('play', () => {
+                if (!isPowerOn) document.getElementById('master-power').click();
+            });
+            navigator.mediaSession.setActionHandler('pause', () => {
+                if (isPowerOn) document.getElementById('master-power').click();
+            });
+            navigator.mediaSession.setActionHandler('stop', () => {
+                if (isPowerOn) document.getElementById('master-power').click();
+            });
         }
 
         let noiseBuffer = null;
@@ -957,6 +975,7 @@
                 this.classList.replace('hover:to-purple-500', 'hover:to-rose-500');
                 Object.keys(synths).forEach(key => { if (synths[key].active) activateTrigger(key); });
                 if (isSequencerActive) runAlternatorCycle();
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
             } else {
                 pwrIcon.setAttribute('data-lucide', 'play');
                 pwrText.innerText = "DÉMARRER L'AUDIO";
@@ -973,6 +992,7 @@
                 sequencerTimer = null;
                 document.getElementById('status-dot').classList.replace('bg-emerald-500', 'bg-red-500');
                 document.getElementById('status-text').innerText = "Audio Inactif";
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
             }
             lucide.createIcons();
         });
