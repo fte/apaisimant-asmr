@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serene - ASMR Procedural Soundscape</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter & Playfair Display for elegant UI) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(31, 41, 55, 0.5) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(17, 24, 39, 0.8) 0, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(99, 102, 241, 0.05) 0, transparent 50%);
+        }
+        .elegant-title {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        /* Glowing effects */
+        .glow-indigo {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+        }
+        .glow-active {
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.3);
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden antialiased">
+
+    <header class="border-b border-slate-800 bg-slate-950/40 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center glow-indigo animate-pulse">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-semibold tracking-tight elegant-title bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200">SERENE</h1>
+                    <p class="text-xs text-indigo-400 font-medium tracking-widest uppercase">Laboratoire ASMR Procédural</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <span id="audio-status" class="flex items-center space-x-2 text-xs text-slate-400 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" id="status-dot"></span>
+                    <span id="status-text">Audio Inactif</span>
+                </span>
+                <button id="info-btn" class="text-slate-400 hover:text-white transition" title="Comment ça marche ?">
+                    <i data-lucide="help-circle" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 md:px-6 py-8 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Synthesizers Control Panel -->
+        <section class="lg:col-span-5 flex flex-col space-y-6">
+            
+            <!-- Master Control Hub -->
+            <div class="bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 border border-slate-800/80 shadow-xl">
+                <h2 class="text-lg font-semibold mb-4 flex items-center text-indigo-300">
+                    <i data-lucide="sliders" class="w-5 h-5 mr-2"></i> Contrôles Généraux
+                </h2>
+                
+                <div class="space-y-4">
+                    <!-- Audio Engine Master Switch -->
+                    <button id="master-power" class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold transition-all shadow-lg shadow-indigo-900/40 flex items-center justify-center space-x-3 transform active:scale-[0.98]">
+                        <i data-lucide="play" class="w-6 h-6 fill-current" id="power-icon"></i>
+                        <span id="power-text">DÉMARRER L'AUDIO</span>
+                    </button>
+
+                    <!-- Master Volume -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-slate-400 font-medium">Volume Général</span>
+                            <span class="text-xs text-indigo-400 font-semibold" id="master-vol-label">70%</span>
+                        </div>
+                        <input type="range" id="master-volume" min="0" max="1" step="0.01" value="0.7" 
+                               class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                    </div>
+
+                    <!-- Binaural Mode Selector -->
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/50 mt-2">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="headphones" class="w-5 h-5 text-indigo-400"></i>
+                            <div>
+                                <p class="text-sm font-medium">Spatialisation 3D (Binaural)</p>
+                                <p class="text-xs text-slate-400">Modulations stéréo naturelles</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="binaural-toggle" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loop / Alternator Config -->
+            <div class="bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 border border-slate-800/80 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold flex items-center text-purple-300">
+                        <i data-lucide="repeat" class="w-5 h-5 mr-2"></i> Mode Alternance Automatique
+                    </h2>
+                    <span class="flex h-3 w-3 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" id="cycle-pulse"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-500" id="cycle-dot"></span>
+                    </span>
+                </div>
+
+                <p class="text-xs text-slate-400 mb-4">Ce mode orchestre automatiquement la transition douce en boucle entre vos différents déclencheurs (triggers) ASMR.</p>
+
+                <div class="space-y-4">
+                    <!-- Toggle Alternator -->
+                    <button id="toggle-sequencer" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-medium transition border border-slate-700/50 flex items-center justify-center space-x-2">
+                        <i data-lucide="infinity" class="w-4 h-4"></i>
+                        <span id="sequencer-status-text">Activer l'alternance automatique</span>
+                    </button>
+
+                    <!-- Cycle Speed -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-slate-400 font-medium">Intervalle de transition</span>
+                            <span class="text-xs text-purple-400 font-semibold" id="cycle-interval-label">15 secondes</span>
+                        </div>
+                        <input type="range" id="cycle-interval" min="5" max="60" step="5" value="15" 
+                               class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                    </div>
+
+                    <!-- Visual Transition Bar -->
+                    <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden mt-2">
+                        <div id="transition-progress" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full w-0 transition-all duration-1000"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-500 uppercase tracking-wider">
+                        <span id="seq-current-trigger">Aucun</span>
+                        <span>Prochain Trigger</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Triggers Activator Grid -->
+            <div class="bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 border border-slate-800/80 shadow-xl flex-grow">
+                <h2 class="text-lg font-semibold mb-4 flex items-center text-emerald-300">
+                    <i data-lucide="waves" class="w-5 h-5 mr-2"></i> Mélangeur de Triggers
+                </h2>
+                
+                <div class="space-y-5" id="trigger-list">
+                    <!-- TAPPING -->
+                    <div class="trigger-card p-4 rounded-xl bg-slate-950/40 border border-slate-800 transition hover:border-slate-700/80 flex flex-col space-y-3" data-trigger="tapping">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center border border-pink-500/30 text-pink-400 trigger-icon-box">
+                                    <i data-lucide="hand" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-semibold">Tapping</h3>
+                                    <p class="text-[10px] text-slate-500">Tapotements délicats</p>
+                                </div>
+                            </div>
+                            <button class="trigger-toggle px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition" data-trigger="tapping">Activer</button>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-[10px] text-slate-500 w-12">Volume</span>
+                            <input type="range" class="trigger-vol flex-grow h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-pink-500" data-trigger="tapping" min="0" max="1.2" step="0.05" value="0.6">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] text-slate-500">Matériau</span>
+                            <div class="flex space-x-1.5">
+                                <button class="material-btn px-2 py-0.5 rounded text-[10px] bg-indigo-600 border border-indigo-500 font-medium text-white transition" data-material="wood" data-trigger="tapping">Bois</button>
+                                <button class="material-btn px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 font-medium transition" data-material="glass" data-trigger="tapping">Verre</button>
+                                <button class="material-btn px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 font-medium transition" data-material="plastic" data-trigger="tapping">Plastique</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SCRATCHING -->
+                    <div class="trigger-card p-4 rounded-xl bg-slate-950/40 border border-slate-800 transition hover:border-slate-700/80 flex flex-col space-y-3" data-trigger="scratching">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/30 text-indigo-400 trigger-icon-box">
+                                    <i data-lucide="hand-metal" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-semibold">Scratching</h3>
+                                    <p class="text-[10px] text-slate-500">Grattage rythmé & friction</p>
+                                </div>
+                            </div>
+                            <button class="trigger-toggle px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition" data-trigger="scratching">Activer</button>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-[10px] text-slate-500 w-12">Volume</span>
+                            <input type="range" class="trigger-vol flex-grow h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-indigo-500" data-trigger="scratching" min="0" max="1.2" step="0.05" value="0.7">
+                        </div>
+                    </div>
+
+                    <!-- WHISPERING -->
+                    <div class="trigger-card p-4 rounded-xl bg-slate-950/40 border border-slate-800 transition hover:border-slate-700/80 flex flex-col space-y-3" data-trigger="whispering">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/30 text-purple-400 trigger-icon-box">
+                                    <i data-lucide="mic" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-semibold">Chuchotements (Whispering)</h3>
+                                    <p class="text-[10px] text-slate-500">Phrases floues & souffles légers</p>
+                                </div>
+                            </div>
+                            <button class="trigger-toggle px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition" data-trigger="whispering">Activer</button>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-[10px] text-slate-500 w-12">Volume</span>
+                            <input type="range" class="trigger-vol flex-grow h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-purple-500" data-trigger="whispering" min="0" max="1" step="0.05" value="0.5">
+                        </div>
+                    </div>
+
+                    <!-- WRITING -->
+                    <div class="trigger-card p-4 rounded-xl bg-slate-950/40 border border-slate-800 transition hover:border-slate-700/80 flex flex-col space-y-3" data-trigger="writing">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center border border-teal-500/30 text-teal-400 trigger-icon-box">
+                                    <i data-lucide="pen-tool" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-semibold">Écriture (Writing)</h3>
+                                    <p class="text-[10px] text-slate-500">Pencil sur carnet en papier</p>
+                                </div>
+                            </div>
+                            <button class="trigger-toggle px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition" data-trigger="writing">Activer</button>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-[10px] text-slate-500 w-12">Volume</span>
+                            <input type="range" class="trigger-vol flex-grow h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-teal-500" data-trigger="writing" min="0" max="1.2" step="0.05" value="0.7">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Visualizer & Sandbox Interface -->
+        <section class="lg:col-span-7 flex flex-col space-y-6">
+            
+            <!-- Real-time Visualizer -->
+            <div class="bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 border border-slate-800/80 shadow-xl flex flex-col relative overflow-hidden h-[300px]">
+                <h2 class="text-lg font-semibold mb-4 flex items-center text-blue-300 z-10">
+                    <i data-lucide="eye" class="w-5 h-5 mr-2"></i> Visualiseur de Fréquences Réactives
+                </h2>
+                
+                <canvas id="visualizer-canvas" class="w-full flex-grow absolute inset-0 rounded-b-2xl pointer-events-none mt-16"></canvas>
+                
+                <!-- Overlay details -->
+                <div class="mt-auto z-10 flex justify-between items-center text-xs text-slate-400 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                    <span class="flex items-center"><i data-lucide="activity" class="w-4 h-4 mr-1 text-purple-400"></i> Ondes Réactives</span>
+                    <span id="hz-indicator">Audio inactif - Aucune donnée</span>
+                </div>
+            </div>
+
+            <!-- The Sandbox: Interactive Area -->
+            <div class="bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 border border-slate-800/80 shadow-xl flex-grow flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                    <div>
+                        <h2 class="text-lg font-semibold flex items-center text-pink-300">
+                            <i data-lucide="palette" class="w-5 h-5 mr-2"></i> Bac à Sable Sensoriel Tactile
+                        </h2>
+                        <p class="text-xs text-slate-400">Caressez, écrivez ou tapotez directement dans la zone pour synthétiser des sons personnalisés.</p>
+                    </div>
+                    
+                    <div class="flex space-x-2 mt-3 sm:mt-0">
+                        <button class="sandbox-tool-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white flex items-center" data-tool="tapping">
+                            <i data-lucide="fingerprint" class="w-3.5 h-3.5 mr-1.5"></i> Tapoter
+                        </button>
+                        <button class="sandbox-tool-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 flex items-center" data-tool="scratching">
+                            <i data-lucide="brush" class="w-3.5 h-3.5 mr-1.5"></i> Gratter
+                        </button>
+                        <button class="sandbox-tool-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 flex items-center" data-tool="writing">
+                            <i data-lucide="pencil" class="w-3.5 h-3.5 mr-1.5"></i> Écrire
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Interactive canvas -->
+                <div class="relative w-full flex-grow min-h-[250px] bg-slate-950/80 rounded-xl border-2 border-dashed border-slate-800 flex items-center justify-center cursor-crosshair overflow-hidden group">
+                    <canvas id="sandbox-canvas" class="absolute inset-0 w-full h-full"></canvas>
+                    
+                    <div id="sandbox-instructions" class="pointer-events-none text-center p-6 transition-opacity duration-300 z-10 bg-slate-950/90 rounded-xl max-w-sm border border-slate-800">
+                        <i data-lucide="mouse-pointer" class="w-8 h-8 mx-auto mb-3 text-indigo-400 animate-bounce"></i>
+                        <p class="text-sm font-semibold mb-1">Touchez ou Glissez ici</p>
+                        <p class="text-xs text-slate-400">Cliquez pour tapoter, maintenez et glissez pour gratter ou écrire.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extra Sleep Timer -->
+            <div class="bg-slate-900/40 backdrop-blur-md rounded-2xl p-4 border border-slate-800/80 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                        <i data-lucide="clock" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold">Minuteur de Sommeil</h3>
+                        <p class="text-[10px] text-slate-400" id="timer-display">Désactivé</p>
+                    </div>
+                </div>
+                <div class="flex space-x-1">
+                    <button class="timer-btn px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 transition" data-time="0">Off</button>
+                    <button class="timer-btn px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 transition" data-time="15">15m</button>
+                    <button class="timer-btn px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 transition" data-time="30">30m</button>
+                    <button class="timer-btn px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 transition" data-time="60">1h</button>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Info/Help Modal -->
+    <div id="help-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+            <button id="close-modal" class="absolute top-4 h-8 w-8 right-4 text-slate-400 hover:text-white transition">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h3 class="text-xl font-semibold elegant-title text-indigo-300 mb-4">Comment fonctionne la synthèse ASMR ?</h3>
+            <div class="space-y-3 text-sm text-slate-300">
+                <p>À la différence d'un simple enregistrement répétitif, cette application génère le son en temps réel de manière mathématique et organique :</p>
+                <ul class="list-disc pl-5 space-y-2 text-xs">
+                    <li><strong>Le Tapping :</strong> Un micro-click de bruit de contact couplé à la résonance d'une pièce physique simulée (bois, verre ou plastique).</li>
+                    <li><strong>Le Scratching :</strong> Un flux de bruit blanc/rose scellé par un filtre passe-bande dont la vitesse et la friction de surface varient de façon pseudo-aléatoire pour recréer la sensation d'ongles glissant sur du tissu rugueux.</li>
+                    <li><strong>L'écriture (Writing) :</strong> Des petits trains de d'impulsions à hautes fréquences modulant à la vitesse d'une écriture cursive pour modéliser une mine de crayon graphite usant une page papier poreuse.</li>
+                    <li><strong>Les Chuchotements (Whispering) :</strong> Un bruit de souffle à bande étroite simulant des balayages de sons comme des "shh" et "huu", déplacé lentement d'une oreille à l'autre grâce au processeur de spatialisation audio 3D.</li>
+                </ul>
+                <p class="text-indigo-400 font-semibold mt-4 text-xs flex items-center"><i data-lucide="headphones" class="w-4 h-4 mr-1"></i> Écoute au casque vivement conseillée pour profiter de la spatialisation binaurale !</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950/20 py-4 px-6 text-center text-xs text-slate-500">
+        <p>© 2026 Serene ASMR Studio. Conçu de manière 100% synthétique sans utiliser un seul mégaoctet de fichier audio.</p>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Global Variables
+        let audioCtx = null;
+        let masterGain = null;
+        let analyser = null;
+        let isPowerOn = false;
+        
+        // Active states for procedural synthesizers
+        const synths = {
+            tapping: { active: false, volume: 0.6, intervalId: null, material: 'wood' },
+            scratching: { active: false, volume: 0.7, intervalId: null, node: null, gainNode: null },
+            whispering: { active: false, volume: 0.5, intervalId: null, node: null, gainNode: null, panNode: null },
+            writing: { active: false, volume: 0.7, intervalId: null, node: null, gainNode: null }
+        };
+
+        // UI Interactions variables
+        let selectedSandboxTool = 'tapping'; // 'tapping', 'scratching', 'writing'
+        let currentTimer = 0; // in minutes
+        let timerInterval = null;
+
+        // Alternator Automaton variables
+        let isSequencerActive = false;
+        let cycleDuration = 15; // default 15s transition
+        let sequencerTimer = null;
+        let seqProgress = 0;
+        let sequenceTriggers = ['tapping', 'scratching', 'whispering', 'writing'];
+        let currentSeqIndex = 0;
+
+        // Visualizer config
+        const visualizerCanvas = document.getElementById('visualizer-canvas');
+        const canvasCtx = visualizerCanvas.getContext('2d');
+        let animationFrameId = null;
+
+        // Sandbox Canvas
+        const sandboxCanvas = document.getElementById('sandbox-canvas');
+        const sandboxCtx = sandboxCanvas.getContext('2d');
+        let isDrawing = false;
+        let lastMousePos = { x: 0, y: 0 };
+        let points = [];
+
+
+        // Setup Web Audio API Context
+        function initAudio() {
+            if (audioCtx) return;
+            
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContextClass();
+            
+            // Set up master nodes
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 512;
+            
+            masterGain = audioCtx.createGain();
+            // Start volume scale
+            masterGain.gain.setValueAtTime(parseFloat(document.getElementById('master-volume').value), audioCtx.currentTime);
+            
+            // Connections
+            masterGain.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            
+            // Update status
+            document.getElementById('status-dot').classList.replace('bg-red-500', 'bg-emerald-500');
+            document.getElementById('status-text').innerText = "Audio Actif";
+            document.getElementById('hz-indicator').innerText = "Visualisateur branché";
+            
+            // Start Visualizer Loop
+            drawVisualizer();
+        }
+
+        // Shared Noise Buffer for organic scratch/whisper/write effects
+        let noiseBuffer = null;
+        function getNoiseBuffer() {
+            if (noiseBuffer) return noiseBuffer;
+            if (!audioCtx) return null;
+            
+            const bufferSize = 2 * audioCtx.sampleRate; // 2 seconds
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            // Generate Pink-ish Noise for softer texture
+            let b0, b1, b2, b3, b4, b5, b6;
+            b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+            
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                // Pink noise filter algorithm
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                data[i] *= 0.11; // rescale
+                b6 = white * 0.115926;
+            }
+            
+            noiseBuffer = buffer;
+            return noiseBuffer;
+        }
+
+
+        // 1. TAPPING GENERATOR
+        function playTapSound(material = 'wood', targetPan = 0) {
+            if (!audioCtx || audioCtx.state === 'suspended') return;
+
+            const triggerGain = synths.tapping.volume;
+            
+            // Contact click node
+            const osc = audioCtx.createOscillator();
+            const oscGain = audioCtx.createGain();
+            
+            // Resonance filter representing material physics
+            const filter = audioCtx.createBiquadFilter();
+            const panner = audioCtx.createStereoPanner();
+
+            osc.connect(oscGain);
+            oscGain.connect(filter);
+            filter.connect(panner);
+            panner.connect(masterGain);
+
+            panner.pan.setValueAtTime(targetPan, audioCtx.currentTime);
+
+            const now = audioCtx.currentTime;
+
+            // Configure properties depending on material
+            if (material === 'wood') {
+                // Low resonant sound
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(250, now);
+                filter.Q.setValueAtTime(4, now);
+
+                oscGain.gain.setValueAtTime(triggerGain * 1.5, now);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                osc.start(now);
+                osc.stop(now + 0.15);
+                
+            } else if (material === 'glass') {
+                // High bell-like sound
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1800, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.05);
+
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1400, now);
+                filter.Q.setValueAtTime(12, now);
+
+                oscGain.gain.setValueAtTime(triggerGain * 0.8, now);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.3);
+                
+            } else if (material === 'plastic') {
+                // Hollow medium plastic tap
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.04);
+
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(350, now);
+                filter.Q.setValueAtTime(8, now);
+
+                oscGain.gain.setValueAtTime(triggerGain * 1.2, now);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+        }
+
+        // 2. SCRATCHING ENGINE
+        function startScratchingEngine() {
+            if (!audioCtx || synths.scratching.node) return;
+
+            const now = audioCtx.currentTime;
+            
+            // Use noise source
+            const source = audioCtx.createBufferSource();
+            source.buffer = getNoiseBuffer();
+            source.loop = true;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(800, now);
+            filter.Q.setValueAtTime(3, now);
+
+            const scratchGain = audioCtx.createGain();
+            scratchGain.gain.setValueAtTime(0, now);
+
+            const panner = audioCtx.createStereoPanner();
+
+            source.connect(filter);
+            filter.connect(scratchGain);
+            scratchGain.connect(panner);
+            panner.connect(masterGain);
+
+            source.start(now);
+
+            synths.scratching.node = source;
+            synths.scratching.gainNode = scratchGain;
+            synths.scratching.pannerNode = panner;
+
+            // Generate slow continuous organic hand movements (scratch strokes)
+            let strokeDirection = true;
+            synths.scratching.intervalId = setInterval(() => {
+                if (!audioCtx || !synths.scratching.active) return;
+                
+                const time = audioCtx.currentTime;
+                const strokeSpeed = 0.2 + Math.random() * 0.4; // variable strokes
+                const pan = (Math.random() * 2 - 1) * 0.6; // random position side
+
+                panner.pan.linearRampToValueAtTime(pan, time + strokeSpeed);
+
+                // Scratch motion modeling
+                if (strokeDirection) {
+                    filter.frequency.exponentialRampToValueAtTime(1100 + Math.random() * 400, time + strokeSpeed);
+                    scratchGain.gain.linearRampToValueAtTime(synths.scratching.volume * (0.3 + Math.random() * 0.5), time + strokeSpeed * 0.3);
+                    scratchGain.gain.linearRampToValueAtTime(0.01, time + strokeSpeed);
+                } else {
+                    filter.frequency.exponentialRampToValueAtTime(600 + Math.random() * 300, time + strokeSpeed);
+                    scratchGain.gain.linearRampToValueAtTime(synths.scratching.volume * (0.2 + Math.random() * 0.4), time + strokeSpeed * 0.3);
+                    scratchGain.gain.linearRampToValueAtTime(0.01, time + strokeSpeed);
+                }
+                strokeDirection = !strokeDirection;
+            }, 550);
+        }
+
+        function stopScratchingEngine() {
+            if (synths.scratching.intervalId) {
+                clearInterval(synths.scratching.intervalId);
+                synths.scratching.intervalId = null;
+            }
+            if (synths.scratching.node) {
+                try {
+                    synths.scratching.node.stop();
+                } catch(e) {}
+                synths.scratching.node.disconnect();
+                synths.scratching.node = null;
+            }
+            synths.scratching.gainNode = null;
+        }
+
+        // 3. WHISPERING ENGINE (Binaural gentle whispers & breath sounds)
+        function startWhisperingEngine() {
+            if (!audioCtx || synths.whispering.node) return;
+
+            const now = audioCtx.currentTime;
+            
+            const source = audioCtx.createBufferSource();
+            source.buffer = getNoiseBuffer();
+            source.loop = true;
+
+            // Highly selective filter to simulate formant sweep (consonants like "shh", "sss")
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1500, now);
+            filter.Q.setValueAtTime(4, now);
+
+            const whisperGain = audioCtx.createGain();
+            whisperGain.gain.setValueAtTime(0, now);
+
+            const panner = audioCtx.createStereoPanner();
+
+            source.connect(filter);
+            filter.connect(whisperGain);
+            whisperGain.connect(panner);
+            panner.connect(masterGain);
+
+            source.start(now);
+
+            synths.whispering.node = source;
+            synths.whispering.gainNode = whisperGain;
+            synths.whispering.panNode = panner;
+
+            // Gentle whisper envelopes generator
+            let panState = -0.8; // start left
+            synths.whispering.intervalId = setInterval(() => {
+                if (!audioCtx || !synths.whispering.active) return;
+
+                const time = audioCtx.currentTime;
+                const phraseLen = 1.2 + Math.random() * 1.8; // phrase duration
+
+                // Slowly drift from ear to ear (binaural spatialisation)
+                panState = panState < 0 ? 0.6 + Math.random()*0.3 : -0.6 - Math.random()*0.3;
+                panner.pan.exponentialRampToValueAtTime(panState, time + phraseLen * 0.5);
+
+                // Simulation of breath phonemes (dynamic sweep)
+                filter.frequency.setValueAtTime(2500 + Math.random()*1000, time);
+                filter.frequency.exponentialRampToValueAtTime(1100 + Math.random()*400, time + phraseLen * 0.6);
+
+                // Speak / Whispering volume pattern
+                whisperGain.gain.linearRampToValueAtTime(synths.whispering.volume * 0.9, time + phraseLen * 0.2);
+                // add random speaking micro-fluctuations
+                for (let step = 0.3; step < 0.8; step += 0.15) {
+                    whisperGain.gain.linearRampToValueAtTime(synths.whispering.volume * (0.3 + Math.random() * 0.6), time + phraseLen * step);
+                }
+                whisperGain.gain.linearRampToValueAtTime(0.001, time + phraseLen);
+
+            }, 3200);
+        }
+
+        function stopWhisperingEngine() {
+            if (synths.whispering.intervalId) {
+                clearInterval(synths.whispering.intervalId);
+                synths.whispering.intervalId = null;
+            }
+            if (synths.whispering.node) {
+                try {
+                    synths.whispering.node.stop();
+                } catch(e) {}
+                synths.whispering.node.disconnect();
+                synths.whispering.node = null;
+            }
+            synths.whispering.gainNode = null;
+        }
+
+        // 4. WRITING ENGINE (Pencil drawing on paper)
+        function startWritingEngine() {
+            if (!audioCtx || synths.writing.node) return;
+
+            const now = audioCtx.currentTime;
+            
+            const source = audioCtx.createBufferSource();
+            source.buffer = getNoiseBuffer();
+            source.loop = true;
+
+            // Very high frequency filter to model fine graphite scratch
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(3200, now);
+
+            const filter2 = audioCtx.createBiquadFilter();
+            filter2.type = 'bandpass';
+            filter2.frequency.setValueAtTime(4500, now);
+            filter2.Q.setValueAtTime(2, now);
+
+            const writeGain = audioCtx.createGain();
+            writeGain.gain.setValueAtTime(0, now);
+
+            const panner = audioCtx.createStereoPanner();
+
+            source.connect(filter);
+            filter.connect(filter2);
+            filter2.connect(writeGain);
+            writeGain.connect(panner);
+            panner.connect(masterGain);
+
+            source.start(now);
+
+            synths.writing.node = source;
+            synths.writing.gainNode = writeGain;
+            synths.writing.panNode = panner;
+
+            // Handwriting strokes sequences
+            synths.writing.intervalId = setInterval(() => {
+                if (!audioCtx || !synths.writing.active) return;
+
+                const time = audioCtx.currentTime;
+                const isShortDot = Math.random() > 0.8;
+                
+                if (isShortDot) {
+                    // Dot (i, j, periods...)
+                    const dotLen = 0.05 + Math.random() * 0.05;
+                    panner.pan.setValueAtTime(Math.random()*0.4 - 0.2, time);
+                    filter2.frequency.setValueAtTime(5000 + Math.random() * 1000, time);
+                    writeGain.gain.setValueAtTime(synths.writing.volume * 1.3, time);
+                    writeGain.gain.exponentialRampToValueAtTime(0.001, time + dotLen);
+                } else {
+                    // Stroke (cursive letter curves)
+                    const strokeLen = 0.15 + Math.random() * 0.35;
+                    const sidePan = Math.random()*0.5 - 0.25;
+                    panner.pan.linearRampToValueAtTime(sidePan, time + strokeLen);
+
+                    // Friction pitch change
+                    filter2.frequency.setValueAtTime(4000, time);
+                    filter2.frequency.exponentialRampToValueAtTime(2200 + Math.random()*2000, time + strokeLen);
+
+                    // Stroke gain envelope
+                    writeGain.gain.linearRampToValueAtTime(synths.writing.volume * (0.4 + Math.random() * 0.6), time + strokeLen * 0.2);
+                    writeGain.gain.linearRampToValueAtTime(synths.writing.volume * 0.2, time + strokeLen * 0.8);
+                    writeGain.gain.exponentialRampToValueAtTime(0.001, time + strokeLen);
+                }
+
+            }, 450);
+        }
+
+        function stopWritingEngine() {
+            if (synths.writing.intervalId) {
+                clearInterval(synths.writing.intervalId);
+                synths.writing.intervalId = null;
+            }
+            if (synths.writing.node) {
+                try {
+                    synths.writing.node.stop();
+                } catch(e) {}
+                synths.writing.node.disconnect();
+                synths.writing.node = null;
+            }
+            synths.writing.gainNode = null;
+        }
+
+        function drawVisualizer() {
+            animationFrameId = requestAnimationFrame(drawVisualizer);
+            
+            if (!analyser) return;
+
+            const width = visualizerCanvas.width = visualizerCanvas.parentElement.clientWidth;
+            const height = visualizerCanvas.height = 180;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            // Get frequency datas
+            analyser.getByteFrequencyData(dataArray);
+
+            canvasCtx.clearRect(0, 0, width, height);
+
+            // Draw clean background
+            canvasCtx.fillStyle = 'rgba(11, 15, 25, 0.4)';
+            canvasCtx.fillRect(0, 0, width, height);
+
+            // Let's draw an elegant spectrum wave
+            const barWidth = (width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+
+            // Smooth curves instead of raw bars
+            canvasCtx.beginPath();
+            canvasCtx.moveTo(0, height);
+
+            let activeHertz = 0;
+            let totalVal = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i] * 0.7;
+                totalVal += dataArray[i];
+
+                const y = height - barHeight;
+                
+                if (i === 0) {
+                    canvasCtx.moveTo(x, y);
+                } else {
+                    canvasCtx.quadraticCurveTo(x - barWidth/2, height - (dataArray[i-1]*0.7 + barHeight)/2, x, y);
+                }
+
+                x += barWidth + 1;
+            }
+
+            canvasCtx.lineTo(width, height);
+            
+            // Neon pink to purple gradient fill
+            const gradient = canvasCtx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');  // Indigo
+            gradient.addColorStop(0.5, 'rgba(168, 85, 247, 0.25)'); // Purple
+            gradient.addColorStop(1, 'rgba(236, 72, 153, 0.05)');   // Pink
+            
+            canvasCtx.fillStyle = gradient;
+            canvasCtx.fill();
+
+            // Highlight border lines
+            canvasCtx.strokeStyle = 'rgba(139, 92, 246, 0.6)';
+            canvasCtx.lineWidth = 2.5;
+            canvasCtx.stroke();
+
+            // Render feedback text
+            const averagePower = totalVal / bufferLength;
+            if (averagePower > 2) {
+                document.getElementById('hz-indicator').innerHTML = `
+                    <span class="flex items-center text-emerald-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
+                        Signal : Synth organique actif (${Math.round(averagePower * 5)} Hz equiv)
+                    </span>`;
+            } else {
+                document.getElementById('hz-indicator').innerText = "Signal statique";
+            }
+        }
+
+        
+        // Handle sandbox canvas sizing
+        function resizeSandbox() {
+            sandboxCanvas.width = sandboxCanvas.parentElement.clientWidth;
+            sandboxCanvas.height = sandboxCanvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', () => {
+            resizeSandbox();
+        });
+        
+        // Setup initial canvas state
+        resizeSandbox();
+        
+        // Setup Sandbox draw loop
+        function drawSandboxTrails() {
+            sandboxCtx.clearRect(0, 0, sandboxCanvas.width, sandboxCanvas.height);
+            
+            // Fading canvas effect
+            sandboxCtx.fillStyle = 'rgba(15, 23, 42, 0.1)';
+            sandboxCtx.fillRect(0, 0, sandboxCanvas.width, sandboxCanvas.height);
+
+            // Draw glowing points
+            points.forEach((pt, index) => {
+                pt.age += 1;
+                pt.y += pt.vy;
+                pt.x += pt.vx;
+                
+                // Color depending on current tool
+                let color = '99, 102, 241'; // Indigo (scratching)
+                if (pt.tool === 'tapping') color = '236, 72, 153'; // Pink
+                if (pt.tool === 'writing') color = '20, 184, 166'; // Teal
+
+                const alpha = Math.max(0, 1 - pt.age / 50);
+                sandboxCtx.beginPath();
+                sandboxCtx.arc(pt.x, pt.y, pt.radius * alpha, 0, Math.PI * 2);
+                sandboxCtx.fillStyle = `rgba(${color}, ${alpha * 0.8})`;
+                sandboxCtx.shadowColor = `rgb(${color})`;
+                sandboxCtx.shadowBlur = 15;
+                sandboxCtx.fill();
+                sandboxCtx.shadowBlur = 0;
+            });
+
+            // Filter dead particles
+            points = points.filter(pt => pt.age < 50);
+            requestAnimationFrame(drawSandboxTrails);
+        }
+        drawSandboxTrails();
+
+        // Get coordinates inside element
+        function getCoords(e) {
+            const rect = sandboxCanvas.getBoundingClientRect();
+            // Works for mouse & touch
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        // Trigger manual audio synthesizers from pointer events
+        function handleSandboxActive(coords, eventType) {
+            if (!audioCtx) initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            // Calculate Stereo panning based on coordinates (left side of canvas = left ear)
+            const panVal = ((coords.x / sandboxCanvas.width) * 2) - 1; // scale to [-1, 1]
+
+            if (selectedSandboxTool === 'tapping' && eventType === 'down') {
+                // Determine material on visual position
+                let mat = 'wood';
+                if (coords.x > sandboxCanvas.width * 0.66) mat = 'glass';
+                else if (coords.x > sandboxCanvas.width * 0.33) mat = 'plastic';
+
+                playTapSound(mat, panVal);
+                
+                // Add big ripple particles
+                for(let i=0; i<8; i++){
+                    points.push({
+                        x: coords.x,
+                        y: coords.y,
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: (Math.random() - 0.5) * 4,
+                        radius: 8 + Math.random() * 12,
+                        age: 0,
+                        tool: 'tapping'
+                    });
+                }
+            } else if (selectedSandboxTool === 'scratching' && eventType === 'move') {
+                // Generate immediate organic scratching sound
+                const speed = Math.hypot(coords.x - lastMousePos.x, coords.y - lastMousePos.y);
+                if (speed > 2) {
+                    playScratchStroke(speed, panVal);
+                    points.push({
+                        x: coords.x,
+                        y: coords.y,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        vy: (Math.random() - 0.5) * 1.5,
+                        radius: 3 + Math.random() * 5,
+                        age: 0,
+                        tool: 'scratching'
+                    });
+                }
+            } else if (selectedSandboxTool === 'writing' && eventType === 'move') {
+                // Generate micro writing sounds
+                const speed = Math.hypot(coords.x - lastMousePos.x, coords.y - lastMousePos.y);
+                if (speed > 1) {
+                    playWritingStroke(speed, panVal);
+                    points.push({
+                        x: coords.x,
+                        y: coords.y,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        radius: 1.5 + Math.random() * 2.5,
+                        age: 0,
+                        tool: 'writing'
+                    });
+                }
+            }
+            
+            lastMousePos = coords;
+        }
+
+        // Helper for quick sandbox scratching sound
+        function playScratchStroke(speed, pan) {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createBufferSource();
+            osc.buffer = getNoiseBuffer();
+            
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            // Speed modulates pitch/frequency of friction
+            filter.frequency.setValueAtTime(600 + (speed * 12), now);
+            filter.Q.setValueAtTime(3, now);
+
+            const gainNode = audioCtx.createGain();
+            const strokeVol = Math.min(0.6, (speed * 0.04) * synths.scratching.volume);
+            gainNode.gain.setValueAtTime(strokeVol, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+            const panner = audioCtx.createStereoPanner();
+            panner.pan.setValueAtTime(pan, now);
+
+            osc.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(panner);
+            panner.connect(masterGain);
+
+            osc.start(now);
+            osc.stop(now + 0.16);
+        }
+
+        // Helper for quick sandbox writing strokes
+        function playWritingStroke(speed, pan) {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createBufferSource();
+            osc.buffer = getNoiseBuffer();
+            
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(4000, now);
+
+            const filter2 = audioCtx.createBiquadFilter();
+            filter2.type = 'bandpass';
+            filter2.frequency.setValueAtTime(4500 + (speed * 8), now);
+            filter2.Q.setValueAtTime(4, now);
+
+            const gainNode = audioCtx.createGain();
+            const strokeVol = Math.min(0.8, (speed * 0.05) * synths.writing.volume);
+            gainNode.gain.setValueAtTime(strokeVol, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+            const panner = audioCtx.createStereoPanner();
+            panner.pan.setValueAtTime(pan, now);
+
+            osc.connect(filter);
+            filter.connect(filter2);
+            filter2.connect(gainNode);
+            gainNode.connect(panner);
+            panner.connect(masterGain);
+
+            osc.start(now);
+            osc.stop(now + 0.09);
+        }
+
+        // Canvas Pointer Listeners
+        function setupSandboxEvents() {
+            const pressDown = (e) => {
+                isDrawing = true;
+                const coords = getCoords(e);
+                lastMousePos = coords;
+                document.getElementById('sandbox-instructions').classList.add('opacity-0');
+                handleSandboxActive(coords, 'down');
+            };
+
+            const dragMove = (e) => {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const coords = getCoords(e);
+                handleSandboxActive(coords, 'move');
+            };
+
+            const liftUp = () => {
+                isDrawing = false;
+            };
+
+            // Mouse Events
+            sandboxCanvas.addEventListener('mousedown', pressDown);
+            sandboxCanvas.addEventListener('mousemove', dragMove);
+            window.addEventListener('mouseup', liftUp);
+
+            // Touch Events (for mobile accessibility)
+            sandboxCanvas.addEventListener('touchstart', pressDown, { passive: false });
+            sandboxCanvas.addEventListener('touchmove', dragMove, { passive: false });
+            window.addEventListener('touchend', liftUp);
+        }
+        setupSandboxEvents();
+
+
+
+        // Transition generator (Crossfade sounds smoothly)
+        function toggleSequencer() {
+            isSequencerActive = !isSequencerActive;
+            
+            const seqBtn = document.getElementById('toggle-sequencer');
+            const cyclePulse = document.getElementById('cycle-pulse');
+            const cycleDot = document.getElementById('cycle-dot');
+
+            if (isSequencerActive) {
+                seqBtn.innerText = "Désactiver l'alternance";
+                seqBtn.classList.replace('bg-slate-800', 'bg-purple-600');
+                seqBtn.classList.replace('hover:bg-slate-700', 'hover:bg-purple-500');
+                cyclePulse.classList.add('animate-ping');
+                cycleDot.classList.replace('bg-purple-900', 'bg-purple-500');
+                
+                // Launch first loop immediately if audio started
+                if(isPowerOn) {
+                    runAlternatorCycle();
+                }
+            } else {
+                seqBtn.innerText = "Activer l'alternance automatique";
+                seqBtn.classList.replace('bg-purple-600', 'bg-slate-800');
+                seqBtn.classList.replace('hover:bg-purple-500', 'hover:bg-slate-700');
+                cyclePulse.classList.remove('animate-ping');
+                cycleDot.classList.replace('bg-purple-500', 'bg-purple-900');
+                
+                // Reset indicator
+                document.getElementById('transition-progress').style.width = '0%';
+                document.getElementById('seq-current-trigger').innerText = "Aucun";
+                
+                clearInterval(sequencerTimer);
+                sequencerTimer = null;
+            }
+        }
+
+        // Run the cycle loops
+        function runAlternatorCycle() {
+            if (!isSequencerActive || !isPowerOn) return;
+
+            clearInterval(sequencerTimer);
+            seqProgress = 0;
+
+            // Pick active trigger from queue
+            const activeTrigger = sequenceTriggers[currentSeqIndex];
+            
+            // Turn off ALL triggers first with fading logic, then activate chosen
+            Object.keys(synths).forEach(key => {
+                if (key !== activeTrigger) {
+                    deactivateTrigger(key);
+                }
+            });
+
+            // Activate chosen trigger
+            setTimeout(() => {
+                activateTrigger(activeTrigger);
+                document.getElementById('seq-current-trigger').innerText = "ACTIF: " + activeTrigger.toUpperCase();
+            }, 800);
+
+            // Setup next trigger index
+            currentSeqIndex = (currentSeqIndex + 1) % sequenceTriggers.length;
+
+            // Start timeline progression ticker
+            const intervalStepMs = 100;
+            const totalSteps = (cycleDuration * 1000) / intervalStepMs;
+            let currentStep = 0;
+
+            sequencerTimer = setInterval(() => {
+                currentStep++;
+                const progressPct = (currentStep / totalSteps) * 100;
+                document.getElementById('transition-progress').style.width = `${progressPct}%`;
+
+                if (currentStep >= totalSteps) {
+                    clearInterval(sequencerTimer);
+                    // Cycle again!
+                    runAlternatorCycle();
+                }
+            }, intervalStepMs);
+        }
+
+
+
+        function activateTrigger(key) {
+            if (!audioCtx) return;
+            
+            synths[key].active = true;
+            
+            // Toggle visual status in UI list
+            const card = document.querySelector(`.trigger-card[data-trigger="${key}"]`);
+            const btn = card.querySelector('.trigger-toggle');
+            btn.innerText = "Désactiver";
+            btn.classList.replace('bg-slate-800', 'bg-emerald-600');
+            btn.classList.replace('text-slate-300', 'text-white');
+            card.classList.add('glow-active', 'border-indigo-500/50');
+            
+            // Start specific synthesizers
+            if (key === 'tapping') {
+                // Set interval loop tap triggering
+                if (!synths.tapping.intervalId) {
+                    synths.tapping.intervalId = setInterval(() => {
+                        if (!synths.tapping.active) return;
+                        // Organic micro rhythms
+                        const offsetPan = Math.random() * 0.8 - 0.4;
+                        playTapSound(synths.tapping.material, offsetPan);
+                    }, 450 + Math.random()*200);
+                }
+            } else if (key === 'scratching') {
+                startScratchingEngine();
+                // ramp volume softly
+                if (synths.scratching.gainNode) {
+                    synths.scratching.gainNode.gain.linearRampToValueAtTime(synths.scratching.volume, audioCtx.currentTime + 1.5);
+                }
+            } else if (key === 'whispering') {
+                startWhisperingEngine();
+                if (synths.whispering.gainNode) {
+                    synths.whispering.gainNode.gain.linearRampToValueAtTime(synths.whispering.volume, audioCtx.currentTime + 2.0);
+                }
+            } else if (key === 'writing') {
+                startWritingEngine();
+                if (synths.writing.gainNode) {
+                    synths.writing.gainNode.gain.linearRampToValueAtTime(synths.writing.volume, audioCtx.currentTime + 1.0);
+                }
+            }
+        }
+
+        function deactivateTrigger(key) {
+            synths[key].active = false;
+
+            const card = document.querySelector(`.trigger-card[data-trigger="${key}"]`);
+            if (card) {
+                const btn = card.querySelector('.trigger-toggle');
+                btn.innerText = "Activer";
+                btn.classList.replace('bg-emerald-600', 'bg-slate-800');
+                btn.classList.replace('text-white', 'text-slate-300');
+                card.classList.remove('glow-active', 'border-indigo-500/50');
+            }
+
+            // Stop specific synthesizers smoothly
+            if (key === 'tapping') {
+                if (synths.tapping.intervalId) {
+                    clearInterval(synths.tapping.intervalId);
+                    synths.tapping.intervalId = null;
+                }
+            } else if (key === 'scratching') {
+                if (synths.scratching.gainNode) {
+                    synths.scratching.gainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
+                    setTimeout(stopScratchingEngine, 1050);
+                } else {
+                    stopScratchingEngine();
+                }
+            } else if (key === 'whispering') {
+                if (synths.whispering.gainNode) {
+                    synths.whispering.gainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+                    setTimeout(stopWhisperingEngine, 1550);
+                } else {
+                    stopWhisperingEngine();
+                }
+            } else if (key === 'writing') {
+                if (synths.writing.gainNode) {
+                    synths.writing.gainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+                    setTimeout(stopWritingEngine, 850);
+                } else {
+                    stopWritingEngine();
+                }
+            }
+        }
+
+
+
+        // Power Master Switch Action
+        document.getElementById('master-power').addEventListener('click', function() {
+            isPowerOn = !isPowerOn;
+
+            const pwrIcon = document.getElementById('power-icon');
+            const pwrText = document.getElementById('power-text');
+
+            if (isPowerOn) {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                pwrIcon.setAttribute('data-lucide', 'square');
+                pwrText.innerText = "COUPER L'AUDIO";
+                this.classList.replace('from-indigo-600', 'from-red-600');
+                this.classList.replace('to-purple-600', 'to-rose-600');
+                this.classList.replace('hover:from-indigo-500', 'hover:from-red-500');
+                this.classList.replace('hover:to-purple-500', 'hover:to-rose-500');
+
+                // Launch active triggers
+                Object.keys(synths).forEach(key => {
+                    if (synths[key].active) {
+                        activateTrigger(key);
+                    }
+                });
+
+                // Launch loop/sequencer if active
+                if (isSequencerActive) {
+                    runAlternatorCycle();
+                }
+            } else {
+                pwrIcon.setAttribute('data-lucide', 'play');
+                pwrText.innerText = "DÉMARRER L'AUDIO";
+                this.classList.replace('from-red-600', 'from-indigo-600');
+                this.classList.replace('to-rose-600', 'to-purple-600');
+                this.classList.replace('hover:from-red-500', 'hover:from-indigo-500');
+                this.classList.replace('hover:to-rose-500', 'hover:to-purple-500');
+
+                // Turn off sound generation engine immediately
+                Object.keys(synths).forEach(key => {
+                    deactivateTrigger(key);
+                    // Re-set state to true so they toggle back on next power on
+                    if(key === 'tapping') synths.tapping.active = true; // keep pre-selected
+                });
+
+                clearInterval(sequencerTimer);
+                sequencerTimer = null;
+
+                document.getElementById('status-dot').classList.replace('bg-emerald-500', 'bg-red-500');
+                document.getElementById('status-text').innerText = "Audio Inactif";
+            }
+            lucide.createIcons();
+        });
+
+        // Trigger Mixer sliders & selectors
+        document.querySelectorAll('.trigger-toggle').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const triggerKey = this.getAttribute('data-trigger');
+                if (synths[triggerKey].active) {
+                    deactivateTrigger(triggerKey);
+                } else {
+                    if (!isPowerOn) {
+                        // Mark active pre-launch
+                        synths[triggerKey].active = true;
+                        this.innerText = "Désactiver";
+                        this.classList.replace('bg-slate-800', 'bg-emerald-600');
+                        this.classList.replace('text-slate-300', 'text-white');
+                        this.closest('.trigger-card').classList.add('glow-active', 'border-indigo-500/50');
+                    } else {
+                        activateTrigger(triggerKey);
+                    }
+                }
+            });
+        });
+
+        // Volume controls
+        document.getElementById('master-volume').addEventListener('input', function() {
+            const val = parseFloat(this.value);
+            document.getElementById('master-vol-label').innerText = `${Math.round(val * 100)}%`;
+            if (masterGain) {
+                masterGain.gain.setValueAtTime(val, audioCtx.currentTime);
+            }
+        });
+
+        // Specific trigger volume sliders
+        document.querySelectorAll('.trigger-vol').forEach(slider => {
+            slider.addEventListener('input', function() {
+                const triggerKey = this.getAttribute('data-trigger');
+                const val = parseFloat(this.value);
+                synths[triggerKey].volume = val;
+                
+                // Realtime gain adjust
+                if (isPowerOn) {
+                    if (triggerKey === 'scratching' && synths.scratching.gainNode) {
+                        synths.scratching.gainNode.gain.setValueAtTime(val, audioCtx.currentTime);
+                    } else if (triggerKey === 'whispering' && synths.whispering.gainNode) {
+                        synths.whispering.gainNode.gain.setValueAtTime(val, audioCtx.currentTime);
+                    } else if (triggerKey === 'writing' && synths.writing.gainNode) {
+                        synths.writing.gainNode.gain.setValueAtTime(val, audioCtx.currentTime);
+                    }
+                }
+            });
+        });
+
+        // Tapping material selector
+        document.querySelectorAll('.material-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const triggerKey = this.getAttribute('data-trigger');
+                const materialValue = this.getAttribute('data-material');
+                
+                // Toggle active material state
+                synths[triggerKey].material = materialValue;
+
+                // Toggle visual class active
+                const parent = this.parentElement;
+                parent.querySelectorAll('.material-btn').forEach(b => {
+                    b.classList.replace('bg-indigo-600', 'bg-slate-800');
+                    b.classList.replace('border-indigo-500', 'border-transparent');
+                    b.classList.replace('text-white', 'text-slate-400');
+                });
+                this.classList.replace('bg-slate-800', 'bg-indigo-600');
+                this.classList.replace('text-slate-400', 'text-white');
+            });
+        });
+
+        // Sandbox Tool Selections
+        document.querySelectorAll('.sandbox-tool-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const toolSelected = this.getAttribute('data-tool');
+                selectedSandboxTool = toolSelected;
+
+                // Visual button updates
+                document.querySelectorAll('.sandbox-tool-btn').forEach(b => {
+                    b.classList.replace('bg-indigo-600', 'bg-slate-800');
+                    b.classList.replace('text-white', 'text-slate-400');
+                });
+                this.classList.replace('bg-slate-800', 'bg-indigo-600');
+                this.classList.replace('text-slate-400', 'text-white');
+            });
+        });
+
+        // Alternator Loop triggers & timing configuration
+        document.getElementById('toggle-sequencer').addEventListener('click', toggleSequencer);
+        
+        document.getElementById('cycle-interval').addEventListener('input', function() {
+            cycleDuration = parseInt(this.value);
+            document.getElementById('cycle-interval-label').innerText = `${cycleDuration} secondes`;
+            
+            // Re-apply if running
+            if (isSequencerActive && isPowerOn) {
+                runAlternatorCycle();
+            }
+        });
+
+        // Sleep Timer Config
+        document.querySelectorAll('.timer-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const minutes = parseInt(this.getAttribute('data-time'));
+                
+                // Reset active visual class
+                document.querySelectorAll('.timer-btn').forEach(b => b.classList.replace('bg-indigo-600', 'bg-slate-800'));
+                
+                if (minutes === 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('timer-display').innerText = "Désactivé";
+                    this.classList.replace('bg-indigo-600', 'bg-slate-800');
+                    return;
+                }
+
+                this.classList.replace('bg-slate-800', 'bg-indigo-600');
+                currentTimer = minutes * 60; // to seconds
+
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    currentTimer--;
+                    const m = Math.floor(currentTimer / 60);
+                    const s = currentTimer % 60;
+                    document.getElementById('timer-display').innerText = `Arrêt dans ${m}m ${s}s`;
+
+                    if (currentTimer <= 0) {
+                        clearInterval(timerInterval);
+                        document.getElementById('timer-display').innerText = "Terminé";
+                        // Shut down audio safely
+                        if(isPowerOn) {
+                            document.getElementById('master-power').click();
+                        }
+                    }
+                }, 1000);
+            });
+        });
+
+        // Binaural 3D simulation switch helper
+        document.getElementById('binaural-toggle').addEventListener('change', function() {
+            const isChecked = this.checked;
+            // Modulate spatial nodes to center if turned off
+            if(!isChecked) {
+                if(synths.scratching.pannerNode) synths.scratching.pannerNode.pan.setValueAtTime(0, audioCtx.currentTime);
+                if(synths.whispering.panNode) synths.whispering.panNode.pan.setValueAtTime(0, audioCtx.currentTime);
+                if(synths.writing.panNode) synths.writing.panNode.pan.setValueAtTime(0, audioCtx.currentTime);
+            }
+        });
+
+        // Modal triggers
+        document.getElementById('info-btn').addEventListener('click', () => {
+            document.getElementById('help-modal').classList.remove('hidden');
+        });
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('help-modal').classList.add('hidden');
+        });
+        document.getElementById('help-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('help-modal')) {
+                document.getElementById('help-modal').classList.add('hidden');
+            }
+        });
+
+    </script>
+</body>
+</html>
