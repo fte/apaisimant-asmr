@@ -499,7 +499,7 @@
             pageturning:{ active: false, volume: 0.7, intervalId: null },
             kineticsand:{ active: false, volume: 0.7, intervalId: null, node: null, gainNode: null, panNode: null },
             fluffymic: { active: false, volume: 0.6, intervalId: null, node: null, gainNode: null, panNode: null },
-            rain:      { active: false, volume: 0.7, intervalId: null, node: null, gainNode: null, thunderId: null },
+            rain:      { active: false, volume: 0.7, intervalId: null, node: null, node2: null, lfoNode: null, gainNode: null, thunderId: null },
             stream:    { active: false, volume: 0.6, intervalId: null, node: null, gainNode: null, panNode: null }
         };
 
@@ -892,55 +892,125 @@
         function startRainEngine() {
             if (!audioCtx || synths.rain.node) return;
             const now = audioCtx.currentTime;
-            // Rain layer: shaped pink noise
+
+            // Layer 1: body of rain — pink noise band-passed in the mid range
             const source = audioCtx.createBufferSource();
             source.buffer = getNoiseBuffer();
             source.loop = true;
-            const lpf = audioCtx.createBiquadFilter();
-            lpf.type = 'lowpass';
-            lpf.frequency.setValueAtTime(6000, now);
             const hpf = audioCtx.createBiquadFilter();
             hpf.type = 'highpass';
-            hpf.frequency.setValueAtTime(200, now);
+            hpf.frequency.setValueAtTime(300, now);
+            const lpf = audioCtx.createBiquadFilter();
+            lpf.type = 'lowpass';
+            lpf.frequency.setValueAtTime(4500, now);
+
+            // Layer 2: high-frequency spray/hiss of drops hitting a surface
+            const source2 = audioCtx.createBufferSource();
+            source2.buffer = getNoiseBuffer();
+            source2.loop = true;
+            const hpf2 = audioCtx.createBiquadFilter();
+            hpf2.type = 'highpass';
+            hpf2.frequency.setValueAtTime(5000, now);
+            const lpf2 = audioCtx.createBiquadFilter();
+            lpf2.type = 'lowpass';
+            lpf2.frequency.setValueAtTime(10000, now);
+            const sprayGain = audioCtx.createGain();
+            sprayGain.gain.setValueAtTime(0.45, now);
+
+            // Slow LFO for gust effect — modulates overall rain volume slightly
+            const lfo = audioCtx.createOscillator();
+            lfo.type = 'sine';
+            lfo.frequency.setValueAtTime(0.07, now);
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.setValueAtTime(0.12, now);
+            lfo.connect(lfoGain);
+
             const rainGain = audioCtx.createGain();
             rainGain.gain.setValueAtTime(0, now);
-            source.connect(hpf); hpf.connect(lpf); lpf.connect(rainGain); rainGain.connect(masterGain);
+            lfoGain.connect(rainGain.gain);
+
+            source.connect(hpf); hpf.connect(lpf); lpf.connect(rainGain);
+            source2.connect(hpf2); hpf2.connect(lpf2); lpf2.connect(sprayGain); sprayGain.connect(rainGain);
+            rainGain.connect(masterGain);
+
             source.start(now);
+            source2.start(now);
+            lfo.start(now);
+
             synths.rain.node = source;
+            synths.rain.node2 = source2;
+            synths.rain.lfoNode = lfo;
             synths.rain.gainNode = rainGain;
-            // Distant thunder scheduler
+
+            // Thunder scheduler
             function scheduleThunder() {
                 if (!synths.rain.active || !audioCtx) return;
-                const delay = 8000 + Math.random() * 22000;
+                const delay = 10000 + Math.random() * 25000;
                 synths.rain.thunderId = setTimeout(() => {
                     if (!synths.rain.active || !audioCtx) return;
                     const t = audioCtx.currentTime;
-                    const osc = audioCtx.createOscillator();
-                    const rumbleGain = audioCtx.createGain();
-                    const rumbleFilter = audioCtx.createBiquadFilter();
-                    rumbleFilter.type = 'lowpass';
-                    rumbleFilter.frequency.setValueAtTime(90, t);
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(55 + Math.random() * 20, t);
-                    osc.frequency.exponentialRampToValueAtTime(30, t + 3.5);
-                    const boomVol = synths.rain.volume * 0.35;
-                    rumbleGain.gain.setValueAtTime(0, t);
-                    rumbleGain.gain.linearRampToValueAtTime(boomVol, t + 0.4);
-                    rumbleGain.gain.setValueAtTime(boomVol, t + 1.5);
-                    rumbleGain.gain.exponentialRampToValueAtTime(0.001, t + 4.0);
+                    const isClose = Math.random() < 0.35; // 35% chance of close strike
+                    const pan = (Math.random() * 2 - 1) * 0.7; // random stereo position
+                    const boomVol = synths.rain.volume * (isClose ? 0.55 : 0.28);
+                    const rumbleDur = isClose ? 5.5 : 7.0;
+                    const panner = audioCtx.createStereoPanner();
+                    panner.pan.setValueAtTime(pan, t);
+                    panner.connect(masterGain);
+
+                    // Initial crack for close strikes: very short broadband burst
+                    if (isClose) {
+                        const crack = audioCtx.createBufferSource();
+                        crack.buffer = getNoiseBuffer();
+                        const crackHpf = audioCtx.createBiquadFilter();
+                        crackHpf.type = 'highpass';
+                        crackHpf.frequency.setValueAtTime(1200, t);
+                        const crackLpf = audioCtx.createBiquadFilter();
+                        crackLpf.type = 'lowpass';
+                        crackLpf.frequency.setValueAtTime(6000, t);
+                        const crackGain = audioCtx.createGain();
+                        crackGain.gain.setValueAtTime(boomVol * 1.4, t);
+                        crackGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+                        const crackPan = audioCtx.createStereoPanner();
+                        crackPan.pan.setValueAtTime(pan, t);
+                        crack.connect(crackHpf); crackHpf.connect(crackLpf); crackLpf.connect(crackGain); crackGain.connect(crackPan); crackPan.connect(masterGain);
+                        crack.start(t); crack.stop(t + 0.15);
+                    }
+
+                    // Three slightly detuned oscillators for a richer rumble
+                    const baseFreq = isClose ? 52 + Math.random() * 18 : 38 + Math.random() * 14;
+                    [0, 3, -4].forEach((detune, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const oscGain = audioCtx.createGain();
+                        const oscFilt = audioCtx.createBiquadFilter();
+                        oscFilt.type = 'lowpass';
+                        oscFilt.frequency.setValueAtTime(isClose ? 120 : 80, t);
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(baseFreq + detune, t);
+                        osc.frequency.exponentialRampToValueAtTime((baseFreq + detune) * 0.45, t + rumbleDur);
+                        const vol = boomVol * (i === 0 ? 1.0 : 0.5);
+                        const attackTime = isClose ? 0.25 : 0.6;
+                        oscGain.gain.setValueAtTime(0, t);
+                        oscGain.gain.linearRampToValueAtTime(vol, t + attackTime);
+                        oscGain.gain.setValueAtTime(vol, t + attackTime + (isClose ? 0.8 : 1.5));
+                        oscGain.gain.exponentialRampToValueAtTime(0.001, t + rumbleDur);
+                        osc.connect(oscFilt); oscFilt.connect(oscGain); oscGain.connect(panner);
+                        osc.start(t); osc.stop(t + rumbleDur + 0.1);
+                    });
+
+                    // Low-frequency noise layer for the "body" of the thunder
                     const noiseThunder = audioCtx.createBufferSource();
                     noiseThunder.buffer = getNoiseBuffer();
                     const noiseFilter = audioCtx.createBiquadFilter();
                     noiseFilter.type = 'lowpass';
-                    noiseFilter.frequency.setValueAtTime(150, t);
+                    noiseFilter.frequency.setValueAtTime(isClose ? 220 : 120, t);
                     const noiseGain = audioCtx.createGain();
+                    const noiseAttack = isClose ? 0.15 : 0.5;
                     noiseGain.gain.setValueAtTime(0, t);
-                    noiseGain.gain.linearRampToValueAtTime(boomVol * 0.5, t + 0.2);
-                    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
-                    osc.connect(rumbleFilter); rumbleFilter.connect(rumbleGain); rumbleGain.connect(masterGain);
-                    noiseThunder.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(masterGain);
-                    osc.start(t); osc.stop(t + 4.5);
-                    noiseThunder.start(t); noiseThunder.stop(t + 4.0);
+                    noiseGain.gain.linearRampToValueAtTime(boomVol * 0.6, t + noiseAttack);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + rumbleDur - 0.5);
+                    noiseThunder.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(panner);
+                    noiseThunder.start(t); noiseThunder.stop(t + rumbleDur);
+
                     scheduleThunder();
                 }, delay);
             }
@@ -994,6 +1064,10 @@
             if (key === 'rain' && synths.rain.thunderId) {
                 clearTimeout(synths.rain.thunderId);
                 synths.rain.thunderId = null;
+            }
+            if (key === 'rain') {
+                if (synths.rain.node2) { try { synths.rain.node2.stop(); } catch(e) {} synths.rain.node2.disconnect(); synths.rain.node2 = null; }
+                if (synths.rain.lfoNode) { try { synths.rain.lfoNode.stop(); } catch(e) {} synths.rain.lfoNode.disconnect(); synths.rain.lfoNode = null; }
             }
             if (synths[key].node) {
                 try { synths[key].node.stop(); } catch(e) {}
