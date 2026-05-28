@@ -119,6 +119,32 @@
                             <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
                         </label>
                     </div>
+
+                    <!-- Presets -->
+                    <div class="p-3 rounded-xl bg-slate-950/50 border border-slate-800/50">
+                        <div class="flex items-center space-x-2 mb-2.5">
+                            <i data-lucide="bookmark" class="w-4 h-4 text-indigo-400"></i>
+                            <span class="text-xs font-medium text-slate-300">Presets</span>
+                        </div>
+                        <div class="flex space-x-2 mb-2">
+                            <input type="text" id="preset-name-input" placeholder="Nom dóu preset…"
+                                   class="flex-grow min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                            <button id="save-preset-btn" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition whitespace-nowrap">
+                                Enregistrà
+                            </button>
+                        </div>
+                        <div class="flex space-x-2">
+                            <select id="preset-select" class="flex-grow min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                                <option value="">— Causir un preset —</option>
+                            </select>
+                            <button id="load-preset-btn" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition">
+                                Cargà
+                            </button>
+                            <button id="delete-preset-btn" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-red-900/40 text-slate-400 hover:text-red-400 transition">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1425,6 +1451,127 @@
             }
         }
 
+        // ── Preferences persistence ──────────────────────────────────────────
+
+        function getCurrentPrefs() {
+            return {
+                sounds: Object.fromEntries(
+                    Object.keys(synths).map(k => [k, { active: synths[k].active, volume: synths[k].volume }])
+                ),
+                tappingMaterial: synths.tapping.material,
+                masterVolume: parseFloat(document.getElementById('master-volume').value),
+                binauralEnabled: document.getElementById('binaural-toggle').checked,
+                isSequencerActive,
+                cycleDuration,
+                selectedSandboxTool,
+            };
+        }
+
+        function savePrefs() {
+            localStorage.setItem('apasimant-prefs', JSON.stringify(getCurrentPrefs()));
+        }
+
+        function applyPrefs(prefs) {
+            const mv = document.getElementById('master-volume');
+            mv.value = prefs.masterVolume;
+            document.getElementById('master-vol-label').innerText = `${Math.round(prefs.masterVolume * 100)}%`;
+            if (masterGain) masterGain.gain.setValueAtTime(prefs.masterVolume, audioCtx.currentTime);
+
+            document.getElementById('binaural-toggle').checked = prefs.binauralEnabled;
+
+            if (prefs.isSequencerActive !== isSequencerActive) toggleSequencer();
+            cycleDuration = prefs.cycleDuration;
+            document.getElementById('cycle-interval').value = cycleDuration;
+            document.getElementById('cycle-interval-label').innerText = `${cycleDuration} segounds`;
+
+            selectedSandboxTool = prefs.selectedSandboxTool;
+            const activeToolBtn = document.querySelector(`.sandbox-tool-btn[data-tool="${selectedSandboxTool}"]`);
+            if (activeToolBtn) activateButtonInGroup('.sandbox-tool-btn', activeToolBtn);
+
+            for (const [key, vals] of Object.entries(prefs.sounds)) {
+                if (!synths[key]) continue;
+                synths[key].active = vals.active;
+                synths[key].volume = vals.volume;
+                const slider = document.querySelector(`.trigger-vol[data-trigger="${key}"]`);
+                if (slider) slider.value = vals.volume;
+                const card = document.querySelector(`.trigger-card[data-trigger="${key}"]`);
+                if (card) setTriggerButtonState(card.querySelector('.trigger-toggle'), card, vals.active);
+            }
+
+            if (prefs.tappingMaterial) {
+                synths.tapping.material = prefs.tappingMaterial;
+                document.querySelectorAll('.material-btn').forEach(btn => {
+                    const isActive = btn.getAttribute('data-material') === prefs.tappingMaterial;
+                    btn.classList.replace(isActive ? 'bg-slate-800' : 'bg-indigo-600', isActive ? 'bg-indigo-600' : 'bg-slate-800');
+                    btn.classList.replace(isActive ? 'text-slate-400' : 'text-white', isActive ? 'text-white' : 'text-slate-400');
+                    if (isActive) btn.classList.replace('border-transparent', 'border-indigo-500');
+                    else btn.classList.replace('border-indigo-500', 'border-transparent');
+                });
+            }
+        }
+
+        function loadPrefs() {
+            const raw = localStorage.getItem('apasimant-prefs');
+            if (!raw) return;
+            try { applyPrefs(JSON.parse(raw)); } catch(e) {}
+        }
+
+        function getNamedPresets() {
+            try { return JSON.parse(localStorage.getItem('apasimant-presets') || '{}'); } catch(e) { return {}; }
+        }
+
+        function saveNamedPresets(presets) {
+            localStorage.setItem('apasimant-presets', JSON.stringify(presets));
+        }
+
+        function populatePresetsSelect() {
+            const sel = document.getElementById('preset-select');
+            const current = sel.value;
+            const presets = getNamedPresets();
+            while (sel.firstChild) sel.removeChild(sel.firstChild);
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = '— Causir un preset —';
+            sel.appendChild(defaultOpt);
+            Object.keys(presets).forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                sel.appendChild(opt);
+            });
+            if (current && presets[current]) sel.value = current;
+        }
+
+        document.getElementById('save-preset-btn').addEventListener('click', function() {
+            const name = document.getElementById('preset-name-input').value.trim();
+            if (!name) return;
+            const presets = getNamedPresets();
+            presets[name] = getCurrentPrefs();
+            saveNamedPresets(presets);
+            savePrefs();
+            populatePresetsSelect();
+            document.getElementById('preset-select').value = name;
+            document.getElementById('preset-name-input').value = '';
+        });
+
+        document.getElementById('load-preset-btn').addEventListener('click', function() {
+            const name = document.getElementById('preset-select').value;
+            if (!name) return;
+            const presets = getNamedPresets();
+            if (presets[name]) { applyPrefs(presets[name]); savePrefs(); }
+        });
+
+        document.getElementById('delete-preset-btn').addEventListener('click', function() {
+            const name = document.getElementById('preset-select').value;
+            if (!name) return;
+            const presets = getNamedPresets();
+            delete presets[name];
+            saveNamedPresets(presets);
+            populatePresetsSelect();
+        });
+
+        // ─────────────────────────────────────────────────────────────────────
+
         document.getElementById('master-power').addEventListener('click', function() {
             isPowerOn = !isPowerOn;
             const pwrIcon = document.getElementById('power-icon');
@@ -1481,6 +1628,7 @@
                 } else {
                     activateTrigger(triggerKey);
                 }
+                savePrefs();
             });
         });
 
@@ -1488,6 +1636,7 @@
             const val = parseFloat(this.value);
             document.getElementById('master-vol-label').innerText = `${Math.round(val * 100)}%`;
             if (masterGain) masterGain.gain.setValueAtTime(val, audioCtx.currentTime);
+            savePrefs();
         });
 
         document.querySelectorAll('.trigger-vol').forEach(slider => {
@@ -1498,6 +1647,7 @@
                 if (isPowerOn && synths[triggerKey].gainNode) {
                     synths[triggerKey].gainNode.gain.setValueAtTime(val, audioCtx.currentTime);
                 }
+                savePrefs();
             });
         });
 
@@ -1512,6 +1662,7 @@
                 });
                 this.classList.replace('bg-slate-800', 'bg-indigo-600');
                 this.classList.replace('text-slate-400', 'text-white');
+                savePrefs();
             });
         });
 
@@ -1519,15 +1670,17 @@
             btn.addEventListener('click', function() {
                 selectedSandboxTool = this.getAttribute('data-tool');
                 activateButtonInGroup('.sandbox-tool-btn', this);
+                savePrefs();
             });
         });
 
-        document.getElementById('toggle-sequencer').addEventListener('click', toggleSequencer);
+        document.getElementById('toggle-sequencer').addEventListener('click', function() { toggleSequencer(); savePrefs(); });
 
         document.getElementById('cycle-interval').addEventListener('input', function() {
             cycleDuration = parseInt(this.value);
             document.getElementById('cycle-interval-label').innerText = `${cycleDuration} segounds`;
             if (isSequencerActive && isPowerOn) runAlternatorCycle();
+            savePrefs();
         });
 
         document.querySelectorAll('.timer-btn').forEach(btn => {
@@ -1562,6 +1715,7 @@
                 if (synths.whispering.panNode) synths.whispering.panNode.pan.setValueAtTime(0, audioCtx.currentTime);
                 if (synths.writing.panNode)    synths.writing.panNode.pan.setValueAtTime(0, audioCtx.currentTime);
             }
+            savePrefs();
         });
 
         document.getElementById('info-btn').addEventListener('click', () => {
@@ -1575,6 +1729,9 @@
                 document.getElementById('help-modal').classList.add('hidden');
             }
         });
+
+        loadPrefs();
+        populatePresetsSelect();
 
     </script>
 </body>
