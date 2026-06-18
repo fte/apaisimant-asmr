@@ -47,3 +47,4 @@ python3 -m http.server
 ```
 
 Dubrir `http://localhost:3000` (o lo pòrt indicat).
+
