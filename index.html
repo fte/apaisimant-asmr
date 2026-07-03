@@ -419,11 +419,17 @@
 
             <!-- Real-time Visualizer -->
             <div class="bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 border border-slate-800/80 shadow-xl flex flex-col relative overflow-hidden h-[300px]">
-                <h2 class="text-lg font-semibold mb-4 flex items-center text-blue-300 z-10">
-                    <i data-lucide="eye" class="w-5 h-5 mr-2"></i> Visualizaire de Frequéncios Reactivos
-                </h2>
+                <div class="flex items-center justify-between mb-4 z-10">
+                    <h2 class="text-lg font-semibold flex items-center text-blue-300">
+                        <i data-lucide="eye" class="w-5 h-5 mr-2"></i> Visualizaire de Frequéncios Reactivos
+                    </h2>
+                    <button id="pip-btn" class="text-slate-400 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-slate-400" title="Durbir en Picture-in-Picture">
+                        <i data-lucide="picture-in-picture-2" class="w-5 h-5 pointer-events-none"></i>
+                    </button>
+                </div>
 
                 <canvas id="visualizer-canvas" class="w-full flex-grow absolute inset-0 rounded-b-2xl pointer-events-none mt-16"></canvas>
+                <video id="pip-video" class="absolute w-px h-px opacity-0 pointer-events-none -z-10" muted playsinline></video>
 
                 <!-- Overlay details -->
                 <div class="mt-auto z-10 flex justify-between items-center text-xs text-slate-400 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
@@ -576,6 +582,25 @@
         let visualizerDataArray = null;
         let cachedGradient = null;
         let lastVisualizerWidth = 0;
+
+        const pipVideo = document.getElementById('pip-video');
+        const pipBtn = document.getElementById('pip-btn');
+        const pipSupported = document.pictureInPictureEnabled
+            && typeof pipVideo.requestPictureInPicture === 'function'
+            && typeof visualizerCanvas.captureStream === 'function';
+        let pipStream = null;
+
+        function ensurePipStream() {
+            if (pipStream) return Promise.resolve();
+            pipStream = visualizerCanvas.captureStream(30);
+            pipVideo.srcObject = pipStream;
+            return pipVideo.play().then(() => {
+                if (pipVideo.readyState >= pipVideo.HAVE_METADATA) return;
+                return new Promise(resolve => {
+                    pipVideo.addEventListener('loadedmetadata', resolve, { once: true });
+                });
+            });
+        }
 
         const sandboxCanvas = document.getElementById('sandbox-canvas');
         const sandboxCtx = sandboxCanvas.getContext('2d');
@@ -1742,6 +1767,30 @@
             }
             savePrefs();
         });
+
+        if (!pipSupported) {
+            pipBtn.disabled = true;
+            pipBtn.title = "Picture-in-Picture pas disponible sus aquest navigador";
+        } else {
+            pipBtn.addEventListener('click', async () => {
+                try {
+                    if (document.pictureInPictureElement === pipVideo) {
+                        await document.exitPictureInPicture();
+                        return;
+                    }
+                    await ensurePipStream();
+                    await pipVideo.requestPictureInPicture();
+                } catch (err) {
+                    console.error('PiP error:', err);
+                }
+            });
+            pipVideo.addEventListener('leavepictureinpicture', () => {
+                pipBtn.classList.remove('text-blue-400');
+            });
+            pipVideo.addEventListener('enterpictureinpicture', () => {
+                pipBtn.classList.add('text-blue-400');
+            });
+        }
 
         document.getElementById('info-btn').addEventListener('click', () => {
             document.getElementById('help-modal').classList.remove('hidden');
